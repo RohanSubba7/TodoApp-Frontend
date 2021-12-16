@@ -21,7 +21,7 @@ const TodoForm = () => {
     e.preventDefault();
 
     const todoData = {
-      name: todoName ? todoName : undefined,
+      task_name: todoName ? todoName : undefined,
     };
 
     await axios.post("/api/posttask", todoData);
