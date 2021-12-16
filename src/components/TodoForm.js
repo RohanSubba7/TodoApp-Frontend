@@ -2,20 +2,33 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import TodoItem from "./TodoItem";
 
-const TodoForm = () => {
+const TodoForm = (id) => {
   const [todos, setTodos] = useState([]);
   const [todoName, setTodoName] = useState("");
+  const [editTodoData, setEditTodoData] = useState(null);
 
   useEffect(() => {
     getTodos();
     console.log(todos);
   }, []);
 
+  useEffect(() => {
+    if (editTodoData) {
+      setTodoName(editTodoData.task_name ? editTodoData.task_name : "");
+    }
+  }, [editTodoData]);
+
+  console.log("id", editTodoData);
   async function getTodos() {
     const data = await axios.get("/api/tasklist");
     console.log(data.data);
     setTodos(data.data);
   }
+
+  const editTodos = (todosData) => {
+    setEditTodoData(todosData);
+    console.log("nooooooooooooooooooooooooooob", todosData);
+  };
 
   async function addTodos(e) {
     e.preventDefault();
@@ -24,9 +37,16 @@ const TodoForm = () => {
       task_name: todoName ? todoName : undefined,
     };
 
-    await axios.post("/api/posttask", todoData);
+    //Only post if the editTodoData is not provided
+    if (!editTodoData) {
+      await axios.post("/api/posttask", todoData);
+    } else {
+      //Update the data if we do have the editTodoData
+      await axios.patch(`/api/updatetask/${editTodoData._id}`, todoData);
+    }
 
     setTodoName("");
+    getTodos();
   }
 
   const renderTodos = () => {
@@ -48,7 +68,7 @@ const TodoForm = () => {
             />
           </div>
           <button type="submit" className="submit-btn">
-            Add Item
+            {editTodoData ? <div>Edit Item</div> : <div>Add Item</div>}
           </button>
         </form>
       </div>
@@ -60,7 +80,14 @@ const TodoForm = () => {
       {insertTodos()}
       {renderTodos()}
       {todos.map((todo, i) => {
-        return <TodoItem key={i} todo={todo} />;
+        return (
+          <TodoItem
+            key={i}
+            getTodos={getTodos}
+            editTodos={editTodos}
+            todo={todo}
+          />
+        );
       })}
     </div>
   );
